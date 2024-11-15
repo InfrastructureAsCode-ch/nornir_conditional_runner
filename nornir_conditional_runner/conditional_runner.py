@@ -1,7 +1,7 @@
 import logging
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 from threading import Semaphore, Condition
-from typing import List, Dict
+from typing import Optional, List, Dict
 from nornir.core.inventory import Host
 from nornir.core.task import AggregatedResult, Task
 
@@ -14,17 +14,15 @@ class ConditionalRunner:
     def __init__(
         self,
         num_workers: int = 100,
-        group_limits: Dict[str, int] = None,
-        conditional_group_key: str = None,
+        group_limits: Optional[Dict[str, int]] = None,
+        conditional_group_key: Optional[str] = None,
     ) -> None:
         """Initialize the ConditionalRunner with concurrency limit semaphores and conditions and group key."""
         self.num_workers = num_workers
         self.group_limits = group_limits or {}
         self.group_key = conditional_group_key
         self.group_semaphores: Dict[str, Semaphore] = {}
-        self.group_conditions: Dict[
-            str, Condition
-        ] = {}  # Condition variables for each group
+        self.group_conditions: Dict[str, Condition] = {}
 
         if not self.group_limits:
             logger.warning(
@@ -63,7 +61,7 @@ class ConditionalRunner:
                 )
 
             # Wait for all futures to complete and collect the results
-            for future in as_completed(futures):
+            for future in futures:
                 worker_result = future.result()
                 if worker_result:
                     result[worker_result.host.name] = worker_result
