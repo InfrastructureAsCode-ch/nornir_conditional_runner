@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nornir-conditional-runner"
-version = "0.0.5"
+version = "0.1.0"
 description = ""
 authors = ["simon linder <simon.linder@ost.ch>"]
 readme = "README.md"
