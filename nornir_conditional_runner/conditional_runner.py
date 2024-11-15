@@ -3,7 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Semaphore, Condition
 from typing import Optional, List, Dict
 from nornir.core.inventory import Host
-from nornir.core.task import AggregatedResult, Task
+from nornir.core.task import AggregatedResult, MultiResult, Task
 
 logger = logging.getLogger(__name__)
 
@@ -47,8 +47,10 @@ class ConditionalRunner:
             futures = []
             for host in hosts:
                 # If the group_key is in host.data, use it; otherwise, fall back to groups
-                groups = host.data.get(
-                    self.group_key, [group.name for group in host.groups]
+                groups = (
+                    host.data.get(self.group_key, [group.name for group in host.groups])
+                    if self.group_key
+                    else [group.name for group in host.groups]
                 )
                 if groups == [group.name for group in host.groups] and self.group_key:
                     logger.warning(
@@ -70,7 +72,7 @@ class ConditionalRunner:
 
     def _dispatch_task_and_wait(
         self, task: Task, host: Host, groups: List[str]
-    ) -> AggregatedResult:
+    ) -> MultiResult:
         """Dispatch task in a separate thread and wait for the semaphore condition."""
         # Ensure semaphores and conditions are initialized for all groups
         for group in groups:
@@ -90,7 +92,7 @@ class ConditionalRunner:
 
     def _run_task_with_semaphores(
         self, task: Task, host: Host, groups: List[str]
-    ) -> AggregatedResult:
+    ) -> MultiResult:
         """Run the task for a host while respecting group-based concurrency."""
         # Acquire semaphores for each group
         acquired_semaphores = []
