@@ -1,0 +1,79 @@
+---
+edge-01:
+  hostname: egde-01.example.com
+  groups: 
+    - basic_config
+  data:
+    conditional_groups:
+      - edge
+
+edge-02:
+  hostname: egde-02.example.com
+  groups: 
+    - basic_config
+  device_group: edge
+  data:
+    conditional_groups:
+      - edge
+
+edge-03:
+  hostname: egde-03.example.com
+  groups: 
+    - basic_config
+  data:
+    conditional_groups:
+      - edge
+
+edge-04:
+  hostname: egde-04.example.com
+  groups: 
+    - basic_config
+  data:
+    conditional_groups:
+      - edge
+
+edge-05:
+  hostname: egde-05.example.com
+  groups: 
+    - basic_config
+  data:
+    conditional_groups:
+      - edge
+
+distribution-01:
+  hostname: distribution-01.example.com
+  groups: 
+    - critical_config
+  data:
+    conditional_groups:
+      - distribution
+      - line1
+
+distribution-02:
+  hostname: distribution-02.example.com
+  groups: 
+    - critical_config
+  data:
+    conditional_groups:
+      - distribution
+      - line2
+
+
+core-01:
+  hostname: core-01.example.com
+  groups: 
+    - critical_config
+  data:
+    conditional_groups:
+      - core
+      - line1
+
+core-02:
+  hostname: core-02.example.com
+  groups: 
+    - critical_config
+  data:
+    conditional_groups:
+      - core
+      - line2
+
