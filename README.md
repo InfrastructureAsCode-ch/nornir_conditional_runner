@@ -83,11 +83,10 @@ Demo topology with conditional groups:
 
 ## Error Handling
 
-If no group_limits are specified for a group, the runner will default to using the global num_workers value as the limit.
-
-Invalid group limits (i.e., non-positive integers) will result in a ValueError.
-
-If neither group_limits nor a conditional_group_key are provided, the runner will fall back to using the host groups as conditional groups, with the default limits set to the global num_workers. This behavior thean basically mirrors that of the default threaded Nornir runner.
+- If conditional_group_key is provided but no conditional groups are defined in the host data, the runner will warn you and default to using the host groups as conditional groups.
+- If no group_limits are specified for a group, the runner will default to using the global num_workers value as the limit.
+- If neither group_limits nor a conditional_group_key are provided, the runner will fall back to using the host groups as conditional groups, with the default limits set to the global num_workers. This behavior thean basically mirrors that of the default threaded Nornir runner.
+- Invalid group limits (i.e., non-positive integers) will result in a ValueError.
 
 ## Contributing
 
