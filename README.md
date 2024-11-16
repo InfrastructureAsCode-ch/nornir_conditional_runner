@@ -1,6 +1,6 @@
 # Nornir Conditional Runner
 
-The `ConditionalRunner` is a custom Nornir runner that enforces concurrency limits based on host groups or custom condition groups. It allows you to control task execution by defining limits on the number of simultaneous tasks for specific groups of hosts, ensuring your nornir tasks are not updating vital network devices at the same time.
+The `ConditionalRunner` is a custom Nornir runner that enforces concurrency limits based on host groups or custom condition groups. It allows you to control task execution by defining limits on the number of simultaneous tasks for specific groups of hosts, ensuring your nornir tasks are not updating vital network devices at the same time. It is built on the threaded runner, with added group limits and conditional groups managed internally by semaphores and conditions, allowing tasks to remain idle until the conditions are met.
 
 ## Installation
 
@@ -44,7 +44,7 @@ result = nr.run(task=my_task)
 print(result)
 ```
 ### Host Example
-Hosts can define custom groups in their data dictionary using the `conditional_group_key` provided to the runner. The runner will use these groups to enforce the `group_limits`.
+Hosts can define custom groups in their data dictionary using the `conditional_group_key` provided in the runner options. The runner will use these groups to enforce the `group_limits`.
 
 ```yaml
 host1:
