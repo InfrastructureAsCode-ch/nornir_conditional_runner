@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nornir-conditional-runner"
-version = "0.1.2"
+version = "0.1.3"
 description = ""
 authors = ["simon linder <simon.linder@ost.ch>"]
 readme = "README.md"
@@ -25,7 +25,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.plugins."nornir.plugins.runners"]
-"groupConditional" = "nornir_conditional_runner.conditional_runner:ConditionalRunner"
+"ConditionalRunner" = "nornir_conditional_runner.conditional_runner:ConditionalRunner"
 
 [tool.ruff.lint]
 # Enable flake8-bugbear (`N`) rules, in addition to the defaults.

@@ -39,7 +39,7 @@ def hello_world(task: Task) -> Result:
 # Demo1 - Running tasks with conditional groups and a fixed sleep time of 20 seconds -> Expected to run in 40 seconds
 nr = InitNornir(
     runner={
-        "plugin": "groupConditional",
+        "plugin": "ConditionalRunner",
         "options": {
             "num_workers": 100,
             "group_limits": {

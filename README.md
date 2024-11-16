@@ -14,11 +14,10 @@ Replace the default Nornir runner with `ConditionalRunner` in your configuration
 
 ```python
 from nornir import InitNornir
-from conditional_runner import ConditionalRunner
 
 nr = InitNornir(
     runner={
-        "plugin": "conditional_runner", # Use the ConditionalRunner instead of the default
+        "plugin": "ConditionalRunner", # Use the ConditionalRunner instead of the default
         "options": {
             "num_workers": 10, # Maximum number of concurrent tasks
             "group_limits": {
