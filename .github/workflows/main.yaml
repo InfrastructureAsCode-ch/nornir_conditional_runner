@@ -1,0 +1,110 @@
+---
+name: test nornir_conditional_runner
+on: [push,pull_request]
+
+jobs:
+  linters:
+    name: linters
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup python
+        uses: actions/setup-python@v5
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v2
+        id: cached-poetry-dependencies
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install Dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Run ruff
+        run: poetry run ruff check
+
+      - name: Run mypy
+        run: poetry run mypy . --pretty --show-error-context
+
+  pytest:
+    name: Testing on Python ${{ matrix.python-version }} (${{ matrix.platform}})
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      matrix:
+        python-version: [ '3.8', '3.9', '3.10', '3.11']
+        platform: [ubuntu-latest, macOS-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v2
+        id: cached-poetry-dependencies
+        with:
+          path: .venv
+          key: venv-${{ matrix.python-version }}-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+        if: ${{ matrix.platform != 'windows-latest' }}  # windows hangs if using a cached venv
+
+      - name: Install Dependencies
+        run: poetry install --no-interaction
+      
+      - name: Poetry show
+        run: poetry show
+      
+      - name: Poetry env info
+        run: poetry env info
+
+      - name: Run pytest
+        run: poetry run python -m pytest -vs
+
+
+
+
+  release:
+    name: Releasing to pypi
+    if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags')
+    needs: [linters, pytest]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      - name: build release
+        run: poetry build
+
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+      
+      - uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: dist/*
