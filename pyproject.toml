@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nornir-conditional-runner"
-version = "0.1.3"
+version = "0.1.4"
 description = ""
 authors = ["simon linder <simon.linder@ost.ch>"]
 readme = "README.md"
@@ -8,6 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.8"
 nornir = "^3"
+setuptools = {version = "*", python = ">=3.12"}
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
@@ -18,7 +19,6 @@ mypy = "*"
 
 [tool.poetry.group.test.dependencies]
 nornir-rich = "^0.2.0"
-setuptools = {version = "*", python = ">=3.12"}
 
 [build-system]
 requires = ["poetry-core"]

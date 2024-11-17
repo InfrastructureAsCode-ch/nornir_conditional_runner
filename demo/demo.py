@@ -74,7 +74,7 @@ print(f"Time taken: {stoptime-starttime}")
 starttime = time.time()
 nr = InitNornir(
     runner={
-        "plugin": "groupConditional",
+        "plugin": "ConditionalRunner",
         "options": {
             "num_workers": 100,
             "group_limits": {
