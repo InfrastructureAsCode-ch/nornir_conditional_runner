@@ -78,6 +78,7 @@ The ConditionalRunner leverages Python's built-in logging system to provide insi
 A demo can be found in the [demo/demo.py](demo/demo.py) file.
 
 Demo topology with conditional groups:
+
 ![Demo topology](demo/demo_topology_drawio.png)
 
 ## Error Handling
