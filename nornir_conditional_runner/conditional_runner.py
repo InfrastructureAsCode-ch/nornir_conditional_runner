@@ -38,6 +38,10 @@ class ConditionalRunner:
                     raise ValueError(
                         f"Invalid limit for group '{group}': {limit}. Limit must be a positive integer."
                     )
+                if self.group_fail_limits.get(group) is not None and (not isinstance(self.group_fail_limits.get(group), int) or self.group_fail_limits.get(group) <= 0):
+                    raise ValueError(
+                        f"Invalid failure limit for group '{group}': {self.group_fail_limits.get(group)}. Limit must be a positive integer."
+                    )
                 self.group_semaphores[group] = Semaphore(limit)
                 self.group_conditions[group] = Condition()
                 self.group_failures[group] = 0
