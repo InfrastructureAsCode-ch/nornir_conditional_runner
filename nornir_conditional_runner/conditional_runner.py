@@ -7,6 +7,7 @@ from nornir.core.task import AggregatedResult, MultiResult, Task, Result
 
 logger = logging.getLogger(__name__)
 
+
 class ConditionalRunner:
     """A runner that enforces concurrency limits and failure thresholds based on host groups."""
 
@@ -39,7 +40,9 @@ class ConditionalRunner:
                         f"Invalid limit for group '{group}': {limit}. Limit must be a positive integer."
                     )
                 fail_limit = self.group_fail_limits.get(group)
-                if fail_limit is not None and (not isinstance(fail_limit, int) or fail_limit <= 0):
+                if fail_limit is not None and (
+                    not isinstance(fail_limit, int) or fail_limit <= 0
+                ):
                     raise ValueError(
                         f"Invalid failure limit for group '{group}': {self.group_fail_limits.get(group)}. Limit must be a positive integer."
                     )
@@ -115,17 +118,24 @@ class ConditionalRunner:
                 # Check failure limits for this group *after acquiring the semaphore*
                 fail_limit = self.group_fail_limits.get(group)
                 with self.group_locks[group]:
-                    if fail_limit is not None and self.group_failures[group] >= fail_limit:
+                    if (
+                        fail_limit is not None
+                        and self.group_failures[group] >= fail_limit
+                    ):
                         logger.warning(
                             f"Group '{group}' reached failure limit ({fail_limit}). Skipping host '{host.name}'."
                         )
                         result = MultiResult(name=host.name)
-                        result.append(Result(
-                            name="skipped",
-                            host=host,
-                            failed=True,
-                            exception=Exception(f"Skipped due to failure limit for group '{group}'")
-                        ))
+                        result.append(
+                            Result(
+                                name="skipped",
+                                host=host,
+                                failed=True,
+                                exception=Exception(
+                                    f"Skipped due to failure limit for group '{group}'"
+                                ),
+                            )
+                        )
                         return result
 
             # Execute the task
