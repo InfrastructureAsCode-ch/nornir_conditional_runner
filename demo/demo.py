@@ -1,47 +1,52 @@
-from nornir import InitNornir
-from nornir_rich.functions import print_result
 import time
 import random
 from datetime import datetime
+from nornir import InitNornir
+from nornir_rich.functions import print_result
 from nornir.core.task import Task, Result
+import logging
 
+# Setting up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+def run_task(task: Task, sleep_time: float) -> Result:
+    """Runs a task that sleeps for a specified amount of time."""
+    groups = task.host.get("groups", {})
+    logger.info(f"Running on {task.host.hostname}; Device group: {groups}")
+    time.sleep(sleep_time)
+    logger.info(f"Done with {task.host.hostname}")
+    
+    return Result(
+        task.host,
+        result=f"My name is {task.host.hostname}! and I am in group {groups} and I ran for {sleep_time} seconds",
+        failed=False #True if task.host.hostname == "core-02.example.com" else False,
+    )
 
 def hello_world_random(task: Task) -> Result:
-    """Runing a task that sleeps for a random time between 10 and 30 seconds."""
-    groups = task.host.get("groups", {})
-    print(
-        f"{datetime.now().time()}: Running on {task.host.hostname}; Device group: {groups}"
-    )
+    """Runs a task with random sleep time between 10 and 30 seconds."""
     runntime = random.uniform(10, 30)
-    time.sleep(runntime)
-    print(f"{datetime.now().time()}: Done with {task.host.name}")
-    return Result(
-        task.host,
-        result=f"My name is {task.host.hostname}! and I am in group {groups} and I ran for {runntime} seconds",
-    )
-
+    return run_task(task, runntime)
 
 def hello_world(task: Task) -> Result:
-    """Runing a task that sleeps for 20 seconds."""
-    conditional_groups = task.host.data.get("conditional_groups", task.host.groups)
-    print(
-        f"{datetime.now().time()}: Running on {task.host.hostname}; Device conditional_groups: {conditional_groups}"
-    )
+    """Runs a task with a fixed sleep time of 20 seconds."""
     runntime = 20
-    time.sleep(runntime)
-    print(f"{datetime.now().time()}: Done with {task.host.name}")
-    return Result(
-        task.host,
-        result=f"My name is {task.host.hostname}! and I am in conditional_groups {conditional_groups} and I ran for {runntime} seconds", failed=True
+    return run_task(task, runntime)
+
+def init_nornir(runner_options: dict, inventory_options: dict) -> InitNornir:
+    """Initializes and returns a Nornir object with the given options."""
+    return InitNornir(
+        runner=runner_options,
+        inventory=inventory_options
     )
 
-
-# Demo1 - Running tasks with conditional groups and a fixed sleep time of 20 seconds -> Expected to run in 40 seconds
-nr = InitNornir(
-    runner={
+def demo1() -> None:
+    """Demo1 - Running tasks with conditional groups and a fixed sleep time of 20 seconds."""
+    runner_options = {
         "plugin": "ConditionalRunner",
         "options": {
-            "num_workers": 100,
+            "num_workers": 100, # Number of workers
+            # Group limits for each group
             "group_limits": {
                 "core": 1,
                 "edge": 3,
@@ -49,54 +54,58 @@ nr = InitNornir(
                 "line1": 1,
                 "line2": 1,
             },
+            # Group fail limits for each group (optional)
             "group_fail_limits": {
                 "core": 1,
                 "edge": 1,
             },
+            # Conditional group key to find groups in inventory > host.data
             "conditional_group_key": "conditional_groups",
         },
-    },
-    inventory={
+    }
+    inventory_options = {
         "plugin": "SimpleInventory",
         "options": {
             "host_file": "demo/inventory/hosts.yaml",
             "group_file": "demo/inventory/groups.yaml",
         },
-    },
-)
+    }
+    
+    nr = init_nornir(runner_options, inventory_options)
+    
+    starttime = time.time()
+    result = nr.run(hello_world)
+    stoptime = time.time()
+    print_result(result)
+    logger.info(f"Time taken: {stoptime - starttime} seconds")
 
-
-starttime = time.time()
-# Run the task using the custom runner
-result = nr.run(hello_world)
-stoptime = time.time()
-print_result(result)
-print(f"Time taken: {stoptime-starttime}")
-
-
-# Demo2 - Running tasks with host groups and random sleep times (Warnig is expected for missing basic_config group limit)
-starttime = time.time()
-nr = InitNornir(
-    runner={
+def demo2() -> None:
+    """Demo2 - Running tasks with host groups and random sleep times."""
+    runner_options = {
         "plugin": "ConditionalRunner",
         "options": {
             "num_workers": 100,
             "group_limits": {
-                # "basic_config": 100,
                 "critical_config": 1,
             },
         },
-    },
-    inventory={
+    }
+    inventory_options = {
         "plugin": "SimpleInventory",
         "options": {
             "host_file": "demo/inventory/hosts.yaml",
             "group_file": "demo/inventory/groups.yaml",
         },
-    },
-)
+    }
+    
+    nr = init_nornir(runner_options, inventory_options)
+    
+    starttime = time.time()
+    result_random = nr.run(hello_world_random)
+    stoptime = time.time()
+    print_result(result_random)
+    logger.info(f"Time taken: {stoptime - starttime} seconds")
 
-result_random = nr.run(hello_world_random)
-stoptime = time.time()
-print_result(result_random)
-print(f"Time taken: {stoptime-starttime}")
+if __name__ == "__main__":
+    demo1()
+    demo2()
