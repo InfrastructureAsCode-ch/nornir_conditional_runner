@@ -20,6 +20,7 @@ def run_task(task: Task, sleep_time: float) -> Result:
     return Result(
         task.host,
         result=f"My name is {task.host.hostname}! and I am in group {groups} and I ran for {sleep_time} seconds",
+        # change this to do the demo for failed tasks
         failed=False #True if task.host.hostname == "core-02.example.com" else False,
     )
 
@@ -46,7 +47,7 @@ def demo1() -> None:
         "plugin": "ConditionalRunner",
         "options": {
             "num_workers": 100, # Number of workers
-            # Group limits for each group
+            # Group concurrent limits for each group
             "group_limits": {
                 "core": 1,
                 "edge": 3,
