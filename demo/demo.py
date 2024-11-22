@@ -32,7 +32,7 @@ def hello_world(task: Task) -> Result:
     print(f"{datetime.now().time()}: Done with {task.host.name}")
     return Result(
         task.host,
-        result=f"My name is {task.host.hostname}! and I am in conditional_groups {conditional_groups} and I ran for {runntime} seconds",
+        result=f"My name is {task.host.hostname}! and I am in conditional_groups {conditional_groups} and I ran for {runntime} seconds", failed=True
     )
 
 
@@ -48,6 +48,10 @@ nr = InitNornir(
                 "distribution": 1,
                 "line1": 1,
                 "line2": 1,
+            },
+            "group_fail_limits": {
+                "core": 1,
+                "edge": 1,
             },
             "conditional_group_key": "conditional_groups",
         },
