@@ -342,7 +342,7 @@ class TestConditionalRunnerFailedLimitFeature(unittest.TestCase):
 
         # Mock the executor's behavior to return task results per host
         def mock_submit(
-            task_func: Callable[..., Any], *args: Any, **kwargs: dict[str, Any]
+            task_func: Callable[..., Any], *args: Any, **kwargs: Dict[str, Any]
         ) -> MagicMock:
             host = args[1]
             if host is not None:
