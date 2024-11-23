@@ -2,7 +2,12 @@
 
 The `ConditionalRunner` is a custom Nornir runner that enforces concurrency limits based on host groups. It allows you to control task execution by defining limits on the number of simultaneous tasks for specific groups of hosts, ensuring your Nornir tasks do not update vital network devices simultaneously. You can also specify to skip the rest of the group if a certain number of vital tasks fail. It is built on the threaded runner, with added conditional `group_limits` and `group_fail_limits` managed internally by a data structure consisting of semaphores, conditions and counters, allowing tasks to remain idle in a waiting state until the start conditions are met.
 
-![Coverage Status](https://img.shields.io/github/actions/workflow/status/InfrastructureAsCode-ch/nornir_conditional_runner/main.yaml?label=Tests&style=flat-square)
+![Test Status](https://img.shields.io/github/actions/workflow/status/InfrastructureAsCode-ch/nornir_conditional_runner/main.yaml?label=Tests&style=flat-square)
+![Coverage](https://img.shields.io/codecov/c/github/InfrastructureAsCode-ch/nornir_conditional_runner?style=flat-square)
+![PyPI](https://img.shields.io/pypi/v/nornir-conditional-runner?style=flat-square)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/nornir-conditional-runner?style=flat-square)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/nornir-conditional-runner?style=flat-square)
+![GitHub](https://img.shields.io/github/license/InfrastructureAsCode-ch/nornir_conditional_runner?style=flat-square)
 
 
 ## Installation
