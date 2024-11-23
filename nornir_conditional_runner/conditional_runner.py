@@ -47,7 +47,7 @@ class ConditionalRunner:
                         f"Invalid failure limit for group '{group}': {self.group_fail_limits.get(group)}. Limit must be a positive integer."
                     )
                 self._init_data_structures(group, limit)
-    
+
     def _init_data_structures(self, group: str, limit: int) -> None:
         self.group_semaphores[group] = Semaphore(limit)
         self.group_conditions[group] = Condition()

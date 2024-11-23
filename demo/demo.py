@@ -34,7 +34,7 @@ def hello_world(task: Task) -> Result:
     return run_task(task, 15, conditional_groups)
 
 
-def demo1(failedTasks: bool = False) -> None:
+def demo1(failed_tasks: bool = False) -> None:
     """Demo1 - Running tasks with conditional groups and a fixed sleep time of 20 seconds."""
     nr = InitNornir(
         runner={
@@ -66,7 +66,7 @@ def demo1(failedTasks: bool = False) -> None:
             },
         },
     )
-    if failedTasks:
+    if failed_tasks:
         nr.inventory.hosts["core-02"].data["fail"] = True
         nr.inventory.hosts["edge-01"].data["fail"] = True
         nr.inventory.hosts["edge-02"].data["fail"] = True
@@ -106,6 +106,6 @@ def demo2() -> None:
 
 
 if __name__ == "__main__":
-    demo1(failedTasks=False)
+    demo1(failed_tasks=False)
     demo2()
-    demo1(failedTasks=True)
+    demo1(failed_tasks=True)

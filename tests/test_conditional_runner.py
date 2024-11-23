@@ -5,7 +5,7 @@ from nornir.core.inventory import Host
 from nornir.core.task import Task, AggregatedResult, MultiResult, Result
 import logging
 from nornir_conditional_runner.conditional_runner import ConditionalRunner
-from typing import List, Dict
+from typing import List, Dict, Callable, Any
 
 
 # Disable logging to avoid clutter in the test output
@@ -256,6 +256,8 @@ class TestConditionalRunner(unittest.TestCase):
 
 
 class TestConditionalRunnerFailedLimitFeature(unittest.TestCase):
+    """Unittest the ConditionalRunner class with failure limits."""
+
     def setUp(self) -> None:
         """Set up common variables for tests."""
         self.task = MagicMock(spec=Task)
@@ -300,7 +302,7 @@ class TestConditionalRunnerFailedLimitFeature(unittest.TestCase):
             # Ensure the correct warning is logged
             self.assertTrue(
                 any(
-                    f"Group 'core' reached failure limit (2). Skipping host 'host3'."
+                    "Group 'core' reached failure limit (2). Skipping host 'host3'."
                     in message
                     for message in log.output
                 )
@@ -309,11 +311,13 @@ class TestConditionalRunnerFailedLimitFeature(unittest.TestCase):
         # Ensure host3 was skipped
         skipped_host = result.get("host3")
         self.assertIsNotNone(skipped_host)
-        self.assertTrue(skipped_host.failed)
+        self.assertTrue(
+            skipped_host.failed
+        ) if skipped_host is not None else self.assertTrue(False)
         self.assertEqual(
             str(skipped_host.exception),
             "Skipped due to failure limit for group 'core'",
-        )
+        ) if skipped_host is not None else self.assertTrue(False)
 
     @patch("nornir_conditional_runner.conditional_runner.ThreadPoolExecutor")
     def test_run_with_multiple_groups_fail_limits_with_failed_tasks(
@@ -330,16 +334,19 @@ class TestConditionalRunnerFailedLimitFeature(unittest.TestCase):
         )
 
         # Simulate task results: some will fail
-        def mock_task_result(host):
+        def mock_task_result(host: str) -> MagicMock:
             mock_result = MagicMock(spec=AggregatedResult)
             mock_result.failed = host in {"core-01", "edge-01"}  # Fail specific hosts
             mock_result.name = f"mock_task_{host}"
             return mock_result
 
         # Mock the executor's behavior to return task results per host
-        def mock_submit(task_func, *args, **kwargs):
-            host = kwargs.get("host")
-            hostname = host.name if hasattr(host, "name") else host
+        def mock_submit(
+            task_func: Callable[..., Any], *args: Any, **kwargs: dict[str, Any]
+        ) -> MagicMock:
+            host = args[1]
+            if host is not None:
+                hostname = host.name if hasattr(host, "name") else str(host)
             return MagicMock(result=MagicMock(return_value=mock_task_result(hostname)))
 
         mock_executor.return_value.__enter__.return_value.submit.side_effect = (
@@ -347,12 +354,12 @@ class TestConditionalRunnerFailedLimitFeature(unittest.TestCase):
         )
 
         # Mock hosts with the expected format
-        self.hosts = [
-            MagicMock(name="core-01", data={"conditional_groups": ["core"]}),
-            MagicMock(name="core-02", data={"conditional_groups": ["core"]}),
-            MagicMock(name="edge-01", data={"conditional_groups": ["edge"]}),
-            MagicMock(name="edge-02", data={"conditional_groups": ["edge"]}),
-            MagicMock(name="edge-03", data={"conditional_groups": ["edge"]}),
+        self.hosts: List[Host] = [
+            Host(name="core-01", data={"conditional_groups": ["core"]}),
+            Host(name="core-02", data={"conditional_groups": ["core"]}),
+            Host(name="edge-01", data={"conditional_groups": ["edge"]}),
+            Host(name="edge-02", data={"conditional_groups": ["edge"]}),
+            Host(name="edge-03", data={"conditional_groups": ["edge"]}),
         ]
 
         # Run the ConditionalRunner with the mock task and hosts
@@ -381,10 +388,16 @@ class TestConditionalRunnerFailedLimitFeature(unittest.TestCase):
     def test_initialization_with_invalid_limits(self) -> None:
         """Test initialization with invalid group limits, expecting ValueError."""
         with self.assertRaises(ValueError):
-            ConditionalRunner(group_limits={"core": 1}, group_fail_limits={"core": 0, "edge": -1})
+            ConditionalRunner(
+                group_limits={"core": 1}, group_fail_limits={"core": 0, "edge": -1}
+            )
 
         with self.assertRaises(ValueError):
-            ConditionalRunner(num_workers=2, group_limits={"core": 1}, group_fail_limits={"core": "x"})  # type: ignore[dict-item]
+            ConditionalRunner(
+                num_workers=2,
+                group_limits={"core": 1},
+                group_fail_limits={"core": "x"},  # type: ignore[dict-item]
+            )
 
 
 if __name__ == "__main__":
