@@ -13,6 +13,8 @@ setuptools = {version = "*", python = ">=3.12"}
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
+pytest-cov = "*"
+
 
 [tool.poetry.group.dev.dependencies]
 ruff = "*"

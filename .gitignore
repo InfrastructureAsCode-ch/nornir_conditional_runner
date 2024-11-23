@@ -5,3 +5,5 @@
 .ruff_cache/
 dist/
 nornir.log
+.coverage
+coverage.xml
