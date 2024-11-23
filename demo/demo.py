@@ -4,11 +4,11 @@ from datetime import datetime
 from nornir import InitNornir
 from nornir_rich.functions import print_result
 from nornir.core.task import Task, Result
+from typing import List
 
 
-def run_task(task: Task, sleep_time: float, group: str) -> Result:
+def run_task(task: Task, sleep_time: float, groups: List[str]) -> Result:
     """Run a task that sleeps for a specified amount of time."""
-    groups = task.host.get("groups", {})
     print(
         f"{datetime.now().time()}: Running on {task.host.hostname}; Device group: {groups}"
     )
@@ -49,7 +49,7 @@ def demo1(failedTasks: bool = False) -> None:
                     "line1": 1,
                     "line2": 1,
                 },
-                # Group fail limits for each group (optional) - once exceeded, the following tasks are skipped
+                # Group fail limits for each group (optional) - once exceeded, the still waiting tasks are skipped
                 "group_fail_limits": {
                     "core": 1,  # Only allow one core device to fail
                     "edge": 1,

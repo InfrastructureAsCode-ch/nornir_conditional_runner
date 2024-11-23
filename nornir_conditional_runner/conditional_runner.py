@@ -46,10 +46,13 @@ class ConditionalRunner:
                     raise ValueError(
                         f"Invalid failure limit for group '{group}': {self.group_fail_limits.get(group)}. Limit must be a positive integer."
                     )
-                self.group_semaphores[group] = Semaphore(limit)
-                self.group_conditions[group] = Condition()
-                self.group_failures[group] = 0
-                self.group_locks[group] = Lock()
+                self._init_data_structures(group, limit)
+    
+    def _init_data_structures(self, group: str, limit: int) -> None:
+        self.group_semaphores[group] = Semaphore(limit)
+        self.group_conditions[group] = Condition()
+        self.group_failures[group] = 0
+        self.group_locks[group] = Lock()
 
     def run(self, task: Task, hosts: List[Host]) -> AggregatedResult:
         """Run the task for each host while respecting group-based concurrency limits."""
@@ -59,7 +62,7 @@ class ConditionalRunner:
         with ThreadPoolExecutor(self.num_workers) as pool:
             futures = []
             for host in hosts:
-                # Get groups for the host
+                # If the group_key is in host.data, use it; otherwise, fall back to groups
                 groups = (
                     host.data.get(self.group_key, [group.name for group in host.groups])
                     if self.group_key
@@ -93,9 +96,7 @@ class ConditionalRunner:
                 logger.warning(
                     f"No limit for group '{group}'. Using default limit of {self.num_workers}."
                 )
-                self.group_semaphores[group] = Semaphore(self.num_workers)
-                self.group_conditions[group] = Condition()
-                self.group_locks[group] = Lock()
+                self._init_data_structures(group, self.num_workers)
 
             # Wait for each group's semaphore to be available
             with self.group_conditions[group]:
@@ -146,7 +147,7 @@ class ConditionalRunner:
                 for group in groups:
                     with self.group_locks[group]:
                         self.group_failures[group] += 1
-                        logger.warning(
+                        logger.debug(
                             f"Task failed for host '{host.name}' in group '{group}'. Total failures: {self.group_failures[group]}"
                         )
 

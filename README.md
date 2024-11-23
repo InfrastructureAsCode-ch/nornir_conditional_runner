@@ -1,6 +1,6 @@
 # Nornir Conditional Runner
 
-The `ConditionalRunner` is a custom Nornir runner that enforces concurrency limits based on host groups or custom condition groups. It allows you to control task execution by defining limits on the number of simultaneous tasks for specific groups of hosts, ensuring your nornir tasks are not updating vital network devices at the same time. It is built on the threaded runner, with added group limits and conditional groups managed internally by semaphores and conditions, allowing tasks to remain idle until the conditions are met.
+The `ConditionalRunner` is a custom Nornir runner that enforces concurrency limits based on host groups. It allows you to control task execution by defining limits on the number of simultaneous tasks for specific groups of hosts, ensuring your Nornir tasks do not update vital network devices simultaneously. You can also specify to skip the rest of the group if a certain number of vital tasks fail. It is built on the threaded runner, with added conditional `group_limits` and `group_fail_limits` managed internally by a data structure consisting of semaphores, conditions and counters, allowing tasks to remain idle in a waiting state until the start conditions are met.
 
 ## Installation
 
@@ -24,6 +24,11 @@ nr = InitNornir(
                 "core": 1, # Limit the "core" group to 1 concurrent task
                 "distribution": 2,
                 "edge": 3,
+            },
+            # Group fail limits for each group (optional) - once exceeded, the still waiting tasks are skipped
+            "group_fail_limits": {
+                "core": 1,  # Only allow one core device to fail
+                "edge": 2,
             },
             "conditional_group_key": "conditional_groups", # Custom key for conditional groups config in host data
         },
@@ -56,8 +61,8 @@ host2:
     conditional_groups:
       - distribution
 ````
-If no conditional groups are defined and `conditional_group_key` is not provided to the runner, the runner will use the host groups.
 
+If the `conditional_group_key` is not provided, the runner will default to using the host groups.
 ```yaml
 host1:
   groups: 
@@ -66,25 +71,29 @@ host2:
   groups: 
     - edge
 ```
+### Fail Limits Feature
+The `group_fail_limits` option allows you to specify the maximum number of failed tasks for a group before the runner skips the rest of the waiting tasks in a group. This feature is useful when you want to limit the impact of failing tasks on your network. By example, if one core device fails, you may want to skip the rest of the core devices to avoid further issues. The runner will only skip the tasks that are still waiting to run, not the ones that are already running.
+
 ## Logging
 
 The ConditionalRunner leverages Python's built-in logging system to provide insights into its operation. It logs key events, such as:
 
-- Warnings when a group limit is missing in group_limits, defaulting to the global limit.
-- Warnings when an invalid or missing conditional_group_key causes a fallback to host groups.
+- Warnings, when a group is configured on a host but it is missing in `group_limits`, defaulting to the global limit.
+- Warnings, when an invalid or missing `conditional_group_key` causes a fallback to host groups.
+- Warnings if the `group_fail_limits` for a group are met or exceeded.
 
 ## Demo
 
-A demo can be found in the [demo/demo.py](demo/demo.py) file.
+Three short demos can be found in the [demo/demo.py](demo/demo.py) file.
 
 Demo topology with conditional groups:
 ![Demo topology](demo/demo_topology_drawio.png)
 
-## Error Handling
+## Error Handling / fallback to default behavior of the threaded runner
 
-- If conditional_group_key is provided but no conditional groups are defined in the host data, the runner will warn you and default to using the host groups as conditional groups.
-- If no group_limits are specified for a group, the runner will default to using the global num_workers value as the limit.
-- If neither group_limits nor a conditional_group_key are provided, the runner will fall back to using the host groups as conditional groups, with the default limits set to the global num_workers. This behavior then basically mirrors that of the default threaded Nornir runner.
+- If the `conditional_group_key` is provided but no conditional groups are defined in the host data, the runner will warn you and default to using the host groups as the conditional groups.
+- If no `group_limits` are specified for a group, the runner will default to using the global `num_workers` value as the limit.
+- If neither `group_limits` nor a `conditional_group_key` are provided, the runner will fall back to using the host groups as conditional groups, with the default limits set to the global `num_workers`. -> This behavior then basically mirrors that of the default threaded Nornir runner.
 - Invalid group limits (i.e., non-positive integers) will result in a ValueError.
 
 ## Contributing
