@@ -93,7 +93,7 @@ jobs:
           name: coverage-report
           fail_ci_if_error: true
 
-release only if on main:
+
   release:
     name: Releasing to PyPI
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags') && github.ref == 'refs/heads/main'
