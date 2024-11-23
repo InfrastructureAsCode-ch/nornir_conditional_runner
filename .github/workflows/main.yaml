@@ -90,6 +90,24 @@ jobs:
           name: coverage-report
           path: coverage.xml
 
+      - name: Extract Coverage
+        run: |
+          pip install lxml
+          COVERAGE=$(xmllint --xpath "string(//coverage/@line-rate)" coverage.xml)
+          echo "coverage=$COVERAGE" >> $GITHUB_ENV
+
+      - name: Generate Badge
+        run: |
+          echo "{\"schemaVersion\": 1, \"label\": \"coverage\", \"message\": \"${COVERAGE}%\", \"color\": \"green\"}" > coverage-badge.json
+          mkdir -p public
+          mv coverage-badge.json public/
+
+      - name: Deploy Badge to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          personal_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+
 
   release:
     name: Releasing to PyPI
