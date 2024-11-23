@@ -3,7 +3,6 @@
 ![Test Status](https://img.shields.io/github/actions/workflow/status/InfrastructureAsCode-ch/nornir_conditional_runner/main.yaml?label=Tests&style=flat-square)
 ![Coverage](https://img.shields.io/badge/Coverage-99%25-green?style=flat-square)
 ![PyPI](https://img.shields.io/pypi/v/nornir-conditional-runner?style=flat-square)
-![PyPI - Downloads](https://img.shields.io/pypi/dm/nornir-conditional-runner?style=flat-square)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/nornir-conditional-runner?style=flat-square)
 ![GitHub](https://img.shields.io/github/license/InfrastructureAsCode-ch/nornir_conditional_runner?style=flat-square)
 
@@ -95,6 +94,7 @@ The ConditionalRunner leverages Python's built-in logging system to provide insi
 Three short demos can be found in the [demo/demo.py](demo/demo.py) file.
 
 Demo topology with conditional groups:
+
 ![Demo topology](demo/demo_topology_drawio.png)
 
 ## Error Handling / fallback to default behavior of the threaded runner
