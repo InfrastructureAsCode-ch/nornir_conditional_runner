@@ -1,7 +1,7 @@
 # Nornir Conditional Runner
 
 ![Test Status](https://img.shields.io/github/actions/workflow/status/InfrastructureAsCode-ch/nornir_conditional_runner/main.yaml?label=Tests&style=flat-square)
-![Coverage](https://img.shields.io/github/actions/workflow/status/InfrastructureAsCode-ch/nornir_conditional_runner/main.yaml?label=Coverage&style=flat-square)
+![Coverage](https://img.shields.io/github/actions/workflow/status/InfrastructureAsCode-ch/nornir_conditional_runner/main.yaml?label=coverage&style=flat-square)
 ![PyPI](https://img.shields.io/pypi/v/nornir-conditional-runner?style=flat-square)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/nornir-conditional-runner?style=flat-square)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/nornir-conditional-runner?style=flat-square)
