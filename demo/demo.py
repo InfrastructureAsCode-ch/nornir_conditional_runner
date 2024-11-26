@@ -35,7 +35,9 @@ def hello_world(task: Task) -> Result:
 
 
 def demo1(failed_tasks: bool = False) -> None:
-    """Demo1 - Running tasks with conditional groups and a fixed sleep time of 20 seconds."""
+    """Demo1 - Running tasks with conditional groups and a fixed sleep time of 15 seconds."""
+    print(f"\n\n ---- Demo1 {'with failed hosts and fail limits' if failed_tasks else ''} ---- \n")
+
     nr = InitNornir(
         runner={
             "plugin": "ConditionalRunner",
@@ -79,6 +81,7 @@ def demo1(failed_tasks: bool = False) -> None:
 
 def demo2() -> None:
     """Demo2 - Running tasks with host groups and random sleep times."""
+    print("\n\n ---- Demo2 ---- \n")
     nr = InitNornir(
         runner={
             "plugin": "ConditionalRunner",
