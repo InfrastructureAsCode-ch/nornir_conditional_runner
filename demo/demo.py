@@ -58,7 +58,8 @@ def demo1(failed_tasks: bool = False) -> None:
                     "core": 1,  # Only allow one core device to fail
                     "edge": 1,
                 },
-                # Conditional group key to find groups in inventory > host.data
+                "skip_group_on_failure": False,  # Default skip the rest of the group if a device fails (can be deactivated here)
+                # Conditional group key so you can configure the condition groups in inventory > host.data
                 "conditional_group_key": "conditional_groups",
             },
         },
@@ -82,7 +83,7 @@ def demo1(failed_tasks: bool = False) -> None:
 
 
 def demo2() -> None:
-    """Demo2 - Running tasks with host groups and random sleep times."""
+    """Demo2 - Running tasks with host groups and random sleep times and minimal options."""
     print("\n\n ---- Demo2 ---- \n")
     nr = InitNornir(
         runner={
