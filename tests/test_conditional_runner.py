@@ -399,6 +399,50 @@ class TestConditionalRunnerFailedLimitFeature(unittest.TestCase):
                 group_fail_limits={"core": "x"},  # type: ignore[dict-item]
             )
 
+    def test_skipped_task_is_in_result(self) -> None:
+        """Test that a skipped task is recorded in the result."""
+        runner = ConditionalRunner(
+            num_workers=3,
+            group_limits={"core": 1},
+            skip_group_on_failure=True,
+            conditional_group_key="conditional_groups",
+        )
+
+        hosts = [
+            Host(name="core-01_fail", data={"conditional_groups": ["core"]}),
+            Host(name="core-02", data={"conditional_groups": ["core"]}),
+        ]
+
+        result = runner.run(self.task, hosts)
+
+        # Verify result contains skipped host
+        self.assertIn("core-02", result)
+        self.assertTrue(result["core-02"].failed)
+        self.assertEqual(
+            str(result["core-02"].exception),
+            "Skipped due to failure limit for group 'core'",
+        )
+
+    def test_skipped_task_is_not_in_result(self) -> None:
+        """Test that a skipped task is recorded in the result."""
+        runner = ConditionalRunner(
+            num_workers=3,
+            group_limits={"core": 1},
+            skip_group_on_failure=False,
+            conditional_group_key="conditional_groups",
+        )
+
+        hosts = [
+            Host(name="core-01_fail", data={"conditional_groups": ["core"]}),
+            Host(name="core-02", data={"conditional_groups": ["core"]}),
+        ]
+
+        result = runner.run(self.task, hosts)
+
+        # Verify result contains skipped host
+        self.assertIn("core-02", result)
+        self.assertFalse(result["core-02"].failed)
+
 
 if __name__ == "__main__":
     unittest.main()
