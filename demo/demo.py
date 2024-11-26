@@ -114,4 +114,6 @@ def demo2() -> None:
 if __name__ == "__main__":
     demo1(failed_tasks=False)
     demo2()
-    demo1(failed_tasks=True) # This will fail core-02 and edge-01 and edge-02 -> core-02 will cause the group core and link2 (skip_group_on_failure = True) to be skipped.
+
+    # This will fail core-02 and edge-01 and edge-02 -> core-02 will cause the group core and link2 (skip_group_on_failure = True) to be skipped.
+    demo1(failed_tasks=True)
