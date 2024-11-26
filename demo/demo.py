@@ -56,7 +56,7 @@ def demo1(failed_tasks: bool = False) -> None:
                 # Group fail limits for each group (optional) - once exceeded, the still waiting tasks are skipped
                 "group_fail_limits": {
                     "core": 1,  # Only allow one core device to fail
-                    "edge": 1,
+                    "edge": 3,
                 },
                 "skip_group_on_failure": True,  # Default: True -> skips the rest of the group if a device fails (can be deactivated here)
                 # Conditional group key so you can configure the condition groups in inventory > host.data
@@ -114,4 +114,4 @@ def demo2() -> None:
 if __name__ == "__main__":
     demo1(failed_tasks=False)
     demo2()
-    demo1(failed_tasks=True)
+    demo1(failed_tasks=True) # This will fail core-02 and edge-01 and edge-02 -> core-02 will cause the group core and link2 (skip_group_on_failure = True) to be skipped.
