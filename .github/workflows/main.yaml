@@ -130,44 +130,44 @@ jobs:
           publish_dir: ./public
 
 
-release:
-  name: Releasing to PyPI
-  if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') # Trigger on tag push
-  needs: [linters, pytest]
-  runs-on: ubuntu-latest
-  steps:
-    - uses: actions/checkout@v4
+  release:
+    name: Releasing to PyPI
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') # Trigger on tag push
+    needs: [linters, pytest]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-    - name: Setup python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.10"
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
 
-    - name: Determine Source Branch
-      id: get_branch
-      run: echo "branch=$(git show -s --pretty=%D HEAD | grep -o 'origin/main')" >> $GITHUB_ENV
+      - name: Determine Source Branch
+        id: get_branch
+        run: echo "branch=$(git show -s --pretty=%D HEAD | grep -o 'origin/main')" >> $GITHUB_ENV
 
-    - name: Verify Source Branch is Main
-      if: env.branch == 'origin/main'
-      run: echo "Tag was created on main branch."
+      - name: Verify Source Branch is Main
+        if: env.branch == 'origin/main'
+        run: echo "Tag was created on main branch."
 
-    - name: Install Poetry
-      if: env.branch == 'origin/main'
-      uses: snok/install-poetry@v1
+      - name: Install Poetry
+        if: env.branch == 'origin/main'
+        uses: snok/install-poetry@v1
 
-    - name: Build release
-      if: env.branch == 'origin/main'
-      run: poetry build
+      - name: Build release
+        if: env.branch == 'origin/main'
+        run: poetry build
 
-    - name: Publish package to PyPI
-      if: env.branch == 'origin/main'
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Publish package to PyPI
+        if: env.branch == 'origin/main'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
 
-    - uses: actions/upload-artifact@v4
-      if: env.branch == 'origin/main'
-      with:
-        name: build
-        path: dist/*
+      - uses: actions/upload-artifact@v4
+        if: env.branch == 'origin/main'
+        with:
+          name: build
+          path: dist/*
