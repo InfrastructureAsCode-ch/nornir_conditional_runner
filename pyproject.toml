@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nornir-conditional-runner"
-version = "0.1.5"
+version = "0.1.6"
 description = "A Nornir plugin enforcing concurrency limits based on device groups"
 authors = ["simon linder <simon.linder@ost.ch>"]
 repository = "https://github.com/InfrastructureAsCode-ch/nornir_conditional_runner"
