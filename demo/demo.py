@@ -58,7 +58,7 @@ def demo1(failed_tasks: bool = False) -> None:
                     "core": 1,  # Only allow one core device to fail
                     "edge": 3,
                 },
-                "skip_group_on_failure": True,  # Default: True -> skips the rest of the group if a device fails (can be deactivated here)
+                "skip_unspecified_group_on_failure": True,  # Default: True -> skips the rest of the group if a device fails (can be deactivated here)
                 # Conditional group key so you can configure the condition groups in inventory > host.data
                 "conditional_group_key": "conditional_groups",
             },
@@ -115,5 +115,5 @@ if __name__ == "__main__":
     demo1(failed_tasks=False)
     demo2()
 
-    # This will fail core-02 and edge-01 and edge-02 -> core-02 will cause the group core and link2 (skip_group_on_failure = True) to be skipped.
+    # This will fail core-02 and edge-01 and edge-02 -> core-02 will cause the group core and link2 (skip_unspecified_group_on_failure = True) to be skipped.
     demo1(failed_tasks=True)

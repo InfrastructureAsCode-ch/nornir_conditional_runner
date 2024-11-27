@@ -40,7 +40,7 @@ nr = InitNornir(
                 "edge": 2,
             },
             "conditional_group_key": "conditional_groups", # Custom key for conditional groups config in host data
-            "skip_group_on_failure": True, # Sets the fail limit to 1 for all groups which do not have a group_fail_limit
+            "skip_unspecified_group_on_failure": True, # Sets the fail limit to 1 for all groups which do not have a group_fail_limit
     },
     inventory={
         "plugin": "SimpleInventory",
@@ -83,7 +83,7 @@ host2:
 ### Fail Limits Feature
 The `group_fail_limits` option allows you to specify the maximum number of failed tasks for a group before the runner skips the rest of the waiting tasks in a group. This feature is useful when you want to limit the impact of failing tasks on your network. By example, if one core device fails, you may want to skip the rest of the core devices to avoid further issues. The runner will only skip the tasks that are still waiting to run, not the ones that are already running.
 
-The `skip_group_on_failure` option sets the fail limit to 1 for all groups which do not have a `group_fail_limit` specified. This default behavior can be overridden by specifying `skip_group_on_failure = False`, whitch will cause the runner to not skip the unspecified groups on failure. The specified `group_fail_limits` will allways be used to skip the group on failure.
+The `skip_unspecified_group_on_failure` option sets the fail limit to 1 for all groups which do not have a `group_fail_limit` specified. This default behavior can be overridden by specifying `skip_unspecified_group_on_failure = False`, whitch will cause the runner to not skip the unspecified groups on failure. The specified `group_fail_limits` will allways be used to skip the group on failure.
 
 ## Logging
 

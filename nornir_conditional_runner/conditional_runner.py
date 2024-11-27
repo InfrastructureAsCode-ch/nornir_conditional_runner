@@ -17,7 +17,7 @@ class ConditionalRunner:
         group_limits: Optional[Dict[str, int]] = None,
         group_fail_limits: Optional[Dict[str, int]] = None,
         conditional_group_key: Optional[str] = None,
-        skip_group_on_failure: bool = True,
+        skip_unspecified_group_on_failure: bool = True,
     ) -> None:
         """Initialize the ConditionalRunner with concurrency limit semaphores, failure counters, and conditions."""
         self.num_workers = num_workers
@@ -28,7 +28,7 @@ class ConditionalRunner:
         self.group_conditions: Dict[str, Condition] = {}
         self.group_failures: Dict[str, int] = {}
         self.group_locks: Dict[str, Lock] = {}
-        self.skip_group_on_failure = skip_group_on_failure
+        self.skip_unspecified_group_on_failure = skip_unspecified_group_on_failure
 
         if not self.group_limits:
             logger.warning(
@@ -55,7 +55,7 @@ class ConditionalRunner:
         self.group_conditions[group] = Condition()
         self.group_failures[group] = 0
         self.group_locks[group] = Lock()
-        if self.skip_group_on_failure:
+        if self.skip_unspecified_group_on_failure:
             self.group_fail_limits[group] = self.group_fail_limits.get(group, 1)
 
     def run(self, task: Task, hosts: List[Host]) -> AggregatedResult:
