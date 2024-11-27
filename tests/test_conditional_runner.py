@@ -404,7 +404,7 @@ class TestConditionalRunnerFailedLimitFeature(unittest.TestCase):
         runner = ConditionalRunner(
             num_workers=3,
             group_limits={"core": 1},
-            skip_group_on_failure=True,
+            skip_unspecified_group_on_failure=True,
             conditional_group_key="conditional_groups",
         )
 
@@ -428,7 +428,7 @@ class TestConditionalRunnerFailedLimitFeature(unittest.TestCase):
         runner = ConditionalRunner(
             num_workers=3,
             group_limits={"core": 1},
-            skip_group_on_failure=False,
+            skip_unspecified_group_on_failure=False,
             conditional_group_key="conditional_groups",
         )
 
