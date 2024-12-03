@@ -96,6 +96,7 @@ The ConditionalRunner leverages Python's built-in logging system to provide insi
 ## Demo
 
 There is a nice, extensive demo [`nornir-conditional-runner-demo`](https://github.com/InfrastructureAsCode-ch/nornir_conditional_runner_demo) done with NetLab by [`Urs Baumann`](https://github.com/ubaumann).
+
 Or there are short demos, which can be found in the [demo/demo.py](demo/demo.py) file.
 
 Demo topology with conditional groups:
