@@ -95,11 +95,13 @@ The ConditionalRunner leverages Python's built-in logging system to provide insi
 
 ## Demo
 
-Three short demos can be found in the [demo/demo.py](demo/demo.py) file.
+> There is a nice, extensive demo [`nornir-conditional-runner-demo`](https://github.com/InfrastructureAsCode-ch/nornir_conditional_runner_demo) done with NetLab by [`Urs Baumann`](https://github.com/ubaumann).
 
-Demo topology with conditional groups:
-
-![Demo topology](demo/demo_topology_drawio.png)
+> Or there are short demos, which can be found in the [demo/demo.py](demo/demo.py) file.
+>
+> Demo topology with conditional groups:
+>
+> ![Demo topology](demo/demo_topology_drawio.png)
 
 ## Error Handling / fallback to default behavior of the threaded runner
 
