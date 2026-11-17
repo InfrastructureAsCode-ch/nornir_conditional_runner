@@ -1,6 +1,6 @@
 ---
 name: test nornir_conditional_runner
-on: [push,pull_request]
+on: [push, pull_request]
 
 jobs:
   linters:
@@ -8,81 +8,56 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup python
-        uses: actions/setup-python@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.10"
+          enable-cache: true
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
-
-      - name: Cache Poetry virtualenv
-        uses: actions/cache@v4
-        id: cached-poetry-dependencies
-        with:
-          path: .venv
-          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-
-      - name: Install Dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-interaction --no-root
+      - name: Install dependencies
+        run: uv sync --locked
 
       - name: Run ruff
-        run: poetry run ruff check
+        run: uv run ruff check
 
       - name: Run ruff format
-        run: poetry run ruff format --check
+        run: uv run ruff format --check
 
       - name: Run mypy
-        run: poetry run mypy . --pretty --show-error-context
-
+        run: uv run mypy . --pretty --show-error-context
 
   pytest:
-    name: Testing on Python ${{ matrix.python-version }} (${{ matrix.platform}})
+    name: Testing on Python ${{ matrix.python-version }} (${{ matrix.platform }})
     defaults:
       run:
         shell: bash
     strategy:
       matrix:
-        python-version: [ '3.8', '3.9', '3.10', '3.11', '3.12']
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         platform: [ubuntu-latest, macOS-latest, windows-latest]
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
-      - name: Setup python
-        uses: actions/setup-python@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
+          enable-cache: true
 
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
-        with:
-          virtualenvs-create: true
-          virtualenvs-in-project: true
+      - name: Install dependencies
+        run: uv sync --locked
 
-      - name: Cache Poetry virtualenv
-        uses: actions/cache@v4
-        id: cached-poetry-dependencies
-        with:
-          path: .venv
-          key: venv-${{ matrix.python-version }}-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-        if: ${{ matrix.platform != 'windows-latest' }}  # windows hangs if using a cached venv
+      - name: Show installed packages
+        run: uv pip list
 
-      - name: Install Dependencies
-        run: poetry install --no-interaction
-      
-      - name: Poetry show
-        run: poetry show
-      
-      - name: Poetry env info
-        run: poetry env info
+      - name: Show environment info
+        run: uv run python -VV
 
       - name: Run tests with coverage
         run: |
-          poetry run pytest --cov=nornir_conditional_runner --cov-report=xml --cov-report=term-missing
+          uv run pytest --cov=nornir_conditional_runner --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage report artifact
         if: matrix.platform == 'macos-latest' && matrix.python-version == '3.11'
@@ -96,7 +71,7 @@ jobs:
     needs: [pytest]
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download coverage report artifact
         uses: actions/download-artifact@v4
@@ -121,14 +96,12 @@ jobs:
           mkdir -p public
           mv coverage-badge.json public/
 
-
       - name: Deploy Badge to GitHub Pages
         if: runner.os == 'macOS'
         uses: peaceiris/actions-gh-pages@v3
         with:
           personal_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./public
-
 
   release:
     name: Releasing to PyPI
@@ -137,23 +110,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup python
-        uses: actions/setup-python@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.10"
-      
-      - name: Install Poetry
-        uses: snok/install-poetry@v1
 
-      - name: build release
-        run: poetry build
+      - name: Build release
+        run: uv build
 
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-      
+
       - uses: actions/upload-artifact@v4
         with:
           name: build
