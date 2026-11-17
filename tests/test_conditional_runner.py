@@ -1,12 +1,15 @@
-import unittest
-from unittest.mock import MagicMock, Mock, patch
-from threading import Semaphore, Condition
-from nornir.core.inventory import Host
-from nornir.core.task import Task, AggregatedResult, MultiResult, Result
 import logging
-from nornir_conditional_runner.conditional_runner import ConditionalRunner
-from typing import List, Dict, Callable, Any
+import threading
+import time
+import unittest
+from threading import Semaphore
+from typing import Any, Callable, Dict, List, Optional, Tuple
+from unittest.mock import MagicMock, Mock, patch
 
+from nornir.core.inventory import Host
+from nornir.core.task import AggregatedResult, MultiResult, Result, Task
+
+from nornir_conditional_runner.conditional_runner import ConditionalRunner
 
 # Disable logging to avoid clutter in the test output
 logging.getLogger(__name__).disabled = True
@@ -55,7 +58,9 @@ class TestConditionalRunner(unittest.TestCase):
         self.assertEqual(runner.num_workers, 10)
         self.assertEqual(runner.group_limits, self.group_limits)
         self.assertIsInstance(runner.group_semaphores["core"], Semaphore)
-        self.assertIsInstance(runner.group_conditions["core"], Condition)
+        self.assertEqual(runner.group_failures["core"], 0)
+        self.assertIn("core", runner.group_locks)
+        self.assertNotIn("group_conditions", vars(runner))
 
     def test_initialization_with_invalid_limits(self) -> None:
         """Test initialization with invalid group limits, expecting ValueError."""
@@ -221,7 +226,7 @@ class TestConditionalRunner(unittest.TestCase):
         """Test that the runner handles an empty list of hosts."""
         runner = ConditionalRunner(num_workers=3, group_limits={"core": 1})
 
-        hosts: list[Host] = []
+        hosts: List[Host] = []
         result = runner.run(self.task, hosts)
 
         # Check that the result is an empty AggregatedResult
@@ -442,6 +447,158 @@ class TestConditionalRunnerFailedLimitFeature(unittest.TestCase):
         # Verify result contains skipped host
         self.assertIn("core-02", result)
         self.assertFalse(result["core-02"].failed)
+
+    def test_caller_fail_limits_dict_is_not_mutated(self) -> None:
+        """Default failure limits must not leak into the dict passed by the caller."""
+        fail_limits = {"core": 2}
+        runner = ConditionalRunner(
+            group_limits={"core": 1, "edge": 1}, group_fail_limits=fail_limits
+        )
+        self.assertEqual(fail_limits, {"core": 2})
+        self.assertEqual(runner.group_fail_limits, {"core": 2, "edge": 1})
+
+
+# Hang detection without extra plugins: run in a daemon thread and join with a timeout.
+def _run_with_timeout(
+    func: Callable[[], Any], timeout: float = 10.0
+) -> Tuple[bool, Optional[Any]]:
+    box: Dict[str, Any] = {}
+
+    def target() -> None:
+        box["result"] = func()
+
+    thread = threading.Thread(target=target, daemon=True)
+    thread.start()
+    thread.join(timeout)
+    return (not thread.is_alive()), box.get("result")
+
+
+def _make_task(work: Optional[Callable[[Host], None]] = None) -> MagicMock:
+    """Create a mock task whose result is non-empty (an empty MultiResult is falsy)."""
+    task = MagicMock(spec=Task)
+    task.name = "mock_task"
+
+    def start(host: Host) -> MultiResult:
+        if work is not None:
+            work(host)
+        result = MultiResult(name=host.name)
+        result.append(Result(name="mock_task", host=host, failed=False))
+        return result
+
+    task.copy.return_value.start.side_effect = start
+    return task
+
+
+class TestConditionalRunnerConcurrency(unittest.TestCase):
+    """Regression tests for the concurrency fixes (deadlock, races, queueing)."""
+
+    def test_group_concurrency_limit_is_respected(self) -> None:
+        """No more than the configured number of hosts run at once in a group."""
+        active = 0
+        peak = 0
+        lock = threading.Lock()
+
+        def work(host: Host) -> None:
+            nonlocal active, peak
+            with lock:
+                active += 1
+                peak = max(peak, active)
+            time.sleep(0.02)
+            with lock:
+                active -= 1
+
+        hosts = [
+            Host(name=f"h{i}", data={"conditional_groups": ["core"]}) for i in range(8)
+        ]
+        runner = ConditionalRunner(
+            num_workers=8,
+            group_limits={"core": 2},
+            conditional_group_key="conditional_groups",
+        )
+        result = runner.run(_make_task(work), hosts)
+
+        self.assertEqual(len(result), 8)
+        self.assertLessEqual(peak, 2)
+
+    def test_no_deadlock_with_opposite_group_order(self) -> None:
+        """Hosts listing the same groups in opposite order must not deadlock."""
+        hosts = [
+            Host(
+                name=f"h{i}",
+                data={"conditional_groups": ["a", "b"] if i % 2 else ["b", "a"]},
+            )
+            for i in range(20)
+        ]
+        runner = ConditionalRunner(
+            num_workers=20,
+            group_limits={"a": 1, "b": 1},
+            conditional_group_key="conditional_groups",
+        )
+        task = _make_task(lambda host: time.sleep(0.002))
+
+        finished, result = _run_with_timeout(lambda: runner.run(task, hosts))
+
+        self.assertTrue(finished, "runner deadlocked")
+        self.assertEqual(len(result), 20)
+
+    def test_duplicate_groups_do_not_self_deadlock(self) -> None:
+        """A host listing the same group twice must not wait on itself."""
+        host = Host(name="h1", data={"conditional_groups": ["core", "core"]})
+        runner = ConditionalRunner(
+            num_workers=2,
+            group_limits={"core": 1},
+            conditional_group_key="conditional_groups",
+        )
+
+        finished, result = _run_with_timeout(lambda: runner.run(_make_task(), [host]))
+
+        self.assertTrue(finished, "runner deadlocked on duplicate group")
+        self.assertIn("h1", result)
+
+    def test_lazy_group_init_is_thread_safe(self) -> None:
+        """Many hosts hitting the same unlisted group initialize it exactly once."""
+        hosts = [
+            Host(name=f"h{i}", data={"conditional_groups": ["new"]}) for i in range(50)
+        ]
+        runner = ConditionalRunner(
+            num_workers=50,
+            group_limits={"core": 1},
+            conditional_group_key="conditional_groups",
+        )
+        task = _make_task(lambda host: time.sleep(0.005))
+
+        with self.assertLogs("nornir_conditional_runner", level="WARNING") as log:
+            finished, result = _run_with_timeout(lambda: runner.run(task, hosts))
+
+        self.assertTrue(finished)
+        self.assertEqual(len(result), 50)
+        init_warnings = [m for m in log.output if "No limit for group 'new'" in m]
+        self.assertEqual(len(init_warnings), 1)
+        # All slots were released again.
+        self.assertEqual(runner.group_semaphores["new"]._value, 50)
+
+    def test_skipped_host_does_not_wait_for_a_slot(self) -> None:
+        """A host whose group already hit its failure limit is skipped immediately."""
+        runner = ConditionalRunner(
+            num_workers=2, group_limits={"core": 1}, group_fail_limits={"core": 1}
+        )
+        runner.group_failures["core"] = 1
+        host = Host(name="h1", data={})
+
+        # Occupy the only slot; a host that queued first would block here.
+        runner.group_semaphores["core"].acquire()
+        try:
+            finished, result = _run_with_timeout(
+                lambda: runner._run_task_with_semaphores(_make_task(), host, ["core"]),
+                timeout=5.0,
+            )
+        finally:
+            runner.group_semaphores["core"].release()
+
+        self.assertTrue(finished, "skipped host waited for a semaphore slot")
+        self.assertIsNotNone(result)
+        self.assertEqual(result[0].name, "skipped")
+        self.assertTrue(result.failed)
 
 
 if __name__ == "__main__":

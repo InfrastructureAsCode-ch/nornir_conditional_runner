@@ -1,42 +1,49 @@
-[tool.poetry]
+[project]
 name = "nornir-conditional-runner"
-version = "0.1.6"
+version = "0.2.0"
 description = "A Nornir plugin enforcing concurrency limits based on device groups"
-authors = ["simon linder <simon.linder@ost.ch>"]
-repository = "https://github.com/InfrastructureAsCode-ch/nornir_conditional_runner"
 readme = "README.md"
+authors = [{ name = "simon linder", email = "simon.linder@ost.ch" }]
+requires-python = ">=3.8,<4"
+dependencies = [
+    "nornir>=3,<4",
+    "setuptools; python_version >= '3.12'",
+]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-nornir = "^3"
-setuptools = {version = "*", python = ">=3.12"}
+[project.urls]
+Repository = "https://github.com/InfrastructureAsCode-ch/nornir_conditional_runner"
 
-[tool.poetry.dev-dependencies]
-pytest = "*"
-pytest-cov = "*"
+[project.entry-points."nornir.plugins.runners"]
+ConditionalRunner = "nornir_conditional_runner.conditional_runner:ConditionalRunner"
 
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+]
+test = [
+    "nornir-rich>=0.2.0,<0.3",
+]
 
-[tool.poetry.group.dev.dependencies]
-ruff = "*"
-mypy = "*"
-
-[tool.poetry.group.test.dependencies]
-nornir-rich = "^0.2.0"
+[tool.uv]
+default-groups = ["dev", "test"]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry.plugins."nornir.plugins.runners"]
-"ConditionalRunner" = "nornir_conditional_runner.conditional_runner:ConditionalRunner"
+[tool.hatch.build.targets.wheel]
+packages = ["nornir_conditional_runner"]
 
 [tool.ruff.lint]
-# Enable flake8-bugbear (`N`) rules, in addition to the defaults.
+# Enable pycodestyle, pyflakes, pep8-naming and pydocstyle rules.
 select = ["E4", "E7", "E9", "F", "N", "D"]
 ignore = ["D100"]
 
 [tool.mypy]
-python_version = "^3.8"
+python_version = "3.8"
 check_untyped_defs = true
 disallow_any_generics = true
 disallow_untyped_calls = true
