@@ -7,7 +7,7 @@ authors = [{ name = "simon linder", email = "simon.linder@ost.ch" }]
 requires-python = ">=3.8,<4"
 dependencies = [
     "nornir>=3,<4",
-    "setuptools; python_version >= '3.12'",
+    "setuptools<81",
 ]
 
 [project.urls]
