@@ -461,7 +461,7 @@ class TestConditionalRunnerFailedLimitFeature(unittest.TestCase):
 # Hang detection without extra plugins: run in a daemon thread and join with a timeout.
 def _run_with_timeout(
     func: Callable[[], Any], timeout: float = 10.0
-) -> Tuple[bool, Optional[Any]]:
+) -> Tuple[bool, Any]:
     box: Dict[str, Any] = {}
 
     def target() -> None:

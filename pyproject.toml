@@ -1,13 +1,13 @@
 [project]
 name = "nornir-conditional-runner"
-version = "0.2.0"
+version = "0.1.6"
 description = "A Nornir plugin enforcing concurrency limits based on device groups"
 readme = "README.md"
 authors = [{ name = "simon linder", email = "simon.linder@ost.ch" }]
 requires-python = ">=3.8,<4"
 dependencies = [
     "nornir>=3,<4",
-    "setuptools<81",
+    "setuptools<81",  # nornir 3.x imports pkg_resources, which uv venvs don't ship
 ]
 
 [project.urls]
@@ -43,7 +43,7 @@ select = ["E4", "E7", "E9", "F", "N", "D"]
 ignore = ["D100"]
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.10"  # oldest version current mypy supports as a target
 check_untyped_defs = true
 disallow_any_generics = true
 disallow_untyped_calls = true
